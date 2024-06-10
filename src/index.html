@@ -30,7 +30,7 @@
             <button class="profile__edit-button" type="button"></button>
             <p class="profile__description">Исследователь океана</p>
           </div>
-          <button class="profile__add-button" type="button"></button>
+          <button class="profile__add-button" data-popup-target="popup_type_new-card" type="button"></button>
         </section>
         <section class="places page__section">
           <ul class="places__list"></ul>
@@ -39,7 +39,7 @@
       <footer class="footer page__section">
         <p class="footer__copyright">© 2021 Mesto Russia</p>
       </footer>
-      <div class="popup popup_type_edit">
+      <div class="popup popup_is-animated popup_type_edit">
         <div class="popup__content">
           <button type="button" class="popup__close"></button>
           <h3 class="popup__title">Редактировать профиль</h3>
@@ -64,7 +64,7 @@
           </form>
         </div>
       </div>
-      <div class="popup popup_type_new-card">
+      <div class="popup popup_is-animated popup_type_new-card">
         <div class="popup__content">
           <button type="button" class="popup__close"></button>
           <h3 class="popup__title">Новое место</h3>
@@ -89,7 +89,7 @@
           </form>
         </div>
       </div>
-      <div class="popup popup_type_image">
+      <div class="popup popup_is-animated popup_type_image">
         <div class="popup__content popup__content_content_image">
           <button type="button" class="popup__close"></button>
           <img src="" alt="" class="popup__image" />
