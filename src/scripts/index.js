@@ -45,7 +45,7 @@ editButtons.forEach(btn => {
 const wrapper = document.querySelector('.profile__info')
 const nameLabel = wrapper.querySelector('.profile__title')
 const descriptionLabel = wrapper.querySelector('.profile__description')
-const handleEditFormButtonClick = (btn) => {
+const handleEditFormButtonClick = () => {
     const popup = document.querySelector('.popup_type_edit')
     popup.querySelector('.popup__input_type_name').value = nameLabel.textContent
     popup.querySelector('.popup__input_type_description').value = descriptionLabel.textContent
@@ -53,8 +53,6 @@ const handleEditFormButtonClick = (btn) => {
 }
 
 const profileForm = document.forms['edit-profile']; // получаем форму
-
-// вешаем на неё обработчик события submit
 profileForm.addEventListener('submit', function (evt) {
     // отменим стандартное поведение
     evt.preventDefault();
@@ -75,7 +73,6 @@ profileForm.addEventListener('submit', function (evt) {
 });
 
 const cardForm = document.forms['new-place']; // получаем форму
-
 // вешаем на неё обработчик события submit
 cardForm.addEventListener('submit', function (evt) {
     // отменим стандартное поведение
@@ -84,7 +81,6 @@ cardForm.addEventListener('submit', function (evt) {
     // проверяем данные пользователя
     const placeName = cardForm.elements['place-name']
     const link = cardForm.elements.link
-    console.log('asdas', placeName)
     if (!placeName.value.length || !link.value.length) {
         return
     }
