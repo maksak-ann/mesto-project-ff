@@ -3,56 +3,68 @@ import "../pages/index.css";
 
 // Imports
 import {
-    initialCards,
     createCard,
     deleteCard,
     likeCard
 } from "./cards";
 import {
     handleOpenPopupButtonClick,
-    handleClosePopupButtonClick, openPopup, closePopup,
+    openPopup,
+    closePopup,
+    clickOnOverlay,
 } from "./modal"
 
-// @todo: DOM узлы
-const cardsLst = document.querySelector(".places__list");
-initialCards.forEach((cardItem) => {
-    cardsLst.append(createCard(cardItem, deleteCard, likeCard));
-});
-
-// Открыть попап
-const buttons = document.querySelectorAll('[data-popup-target]')
-buttons.forEach(btn => {
-    btn.addEventListener('click', (event) => {
-        handleOpenPopupButtonClick(event.target)
+// Общее для попапов
+// Клик по оверлэю
+const popups = document.querySelectorAll('.popup')
+popups.forEach((popup) => {
+    popup.addEventListener('click', (event) => {
+        clickOnOverlay(event.target)
     })
+
 })
 
-// Закрыть попап
+// Клик по кнопке "закрыть попап"
 const closeButtons = document.querySelectorAll('.popup__close')
 closeButtons.forEach(btn => {
     btn.addEventListener('click', (event) => {
-        handleClosePopupButtonClick(event.target)
+        const popup = event.target.closest('.popup_is-opened')
+        closePopup(popup)
     })
 })
 
-const editButtons = document.querySelectorAll('.profile__edit-button')
-editButtons.forEach(btn => {
-    btn.addEventListener('click', (event) => {
-        handleEditFormButtonClick(event.target)
-    })
-})
+// Lightbox popup
+const lightboxPopup = document.querySelector(('.popup_type_image'))
+const image = lightboxPopup.querySelector('img')
+const caption = lightboxPopup.querySelector('.popup__caption')
+const setLightboxImage = (img) => {
+    image.src = img.src
+    image.alt = img.alt
+    caption.textContent = img.alt
+}
+const handleImageClick = (image) => {
+    setLightboxImage(image)
+    openPopup(lightboxPopup)
+}
+
+// EditProfile Popup
+const editProfilePopup = document.querySelector('.popup_type_edit')
+const openEditPopupButton = document.querySelector('.profile__edit-button')
+const nameInput = editProfilePopup.querySelector('.popup__input_type_name')
+const descriptionInput = editProfilePopup.querySelector('.popup__input_type_description')
 
 const wrapper = document.querySelector('.profile__info')
 const nameLabel = wrapper.querySelector('.profile__title')
 const descriptionLabel = wrapper.querySelector('.profile__description')
-const handleEditFormButtonClick = () => {
-    const popup = document.querySelector('.popup_type_edit')
-    popup.querySelector('.popup__input_type_name').value = nameLabel.textContent
-    popup.querySelector('.popup__input_type_description').value = descriptionLabel.textContent
-    openPopup(popup)
-}
 
-const profileForm = document.forms['edit-profile']; // получаем форму
+const profileForm = document.forms['edit-profile']
+
+openEditPopupButton.addEventListener('click', () => {
+    nameInput.value = nameLabel.textContent
+    descriptionInput.value = descriptionLabel.textContent
+    openPopup(editProfilePopup)
+})
+
 profileForm.addEventListener('submit', function (evt) {
     // отменим стандартное поведение
     evt.preventDefault();
@@ -68,12 +80,20 @@ profileForm.addEventListener('submit', function (evt) {
     nameLabel.textContent = name.value
     descriptionLabel.textContent = description.value
 
-    const popup = document.querySelector('.popup_is-opened')
-    closePopup(popup)
+    closePopup(editProfilePopup)
 });
 
-const cardForm = document.forms['new-place']; // получаем форму
-// вешаем на неё обработчик события submit
+// CardForm Popup
+// Открыть попап
+const formPopup = document.querySelector('.popup_type_new-card')
+const openFormPopupButton = document.querySelector('.profile__add-button')
+
+const cardForm = document.forms['new-place'];
+
+openFormPopupButton.addEventListener('click', () => {
+    openPopup(formPopup)
+})
+
 cardForm.addEventListener('submit', function (evt) {
     // отменим стандартное поведение
     evt.preventDefault();
@@ -88,8 +108,40 @@ cardForm.addEventListener('submit', function (evt) {
     cardsLst.prepend(createCard({
         name: placeName.value,
         link: link.value,
-    }, deleteCard, likeCard));
+    }, deleteCard, likeCard, handleImageClick));
 
-    const popup = document.querySelector('.popup_is-opened')
-    closePopup(popup)
+    closePopup(formPopup)
+    cardForm.reset()
+});
+
+// Создание карточек
+const cardsLst = document.querySelector(".places__list");
+const initialCards = [
+    {
+        name: "Архыз",
+        link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/arkhyz.jpg",
+    },
+    {
+        name: "Челябинская область",
+        link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/chelyabinsk-oblast.jpg",
+    },
+    {
+        name: "Иваново",
+        link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/ivanovo.jpg",
+    },
+    {
+        name: "Камчатка",
+        link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/kamchatka.jpg",
+    },
+    {
+        name: "Холмогорский район",
+        link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/kholmogorsky-rayon.jpg",
+    },
+    {
+        name: "Байкал",
+        link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/baikal.jpg",
+    }
+];
+initialCards.forEach((cardItem) => {
+    cardsLst.append(createCard(cardItem, deleteCard, likeCard, handleImageClick));
 });
