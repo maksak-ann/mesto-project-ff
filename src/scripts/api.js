@@ -6,89 +6,78 @@ const config = {
     }
 }
 
-function get(url) {
-    return fetch(url, {
+const getResponseData = (response) => {
+    if (response.ok) {
+        return response.json();
+    }
+
+    return Promise.reject(`Ошибка: ${response.status}`);
+}
+
+const fetchMe = () => {
+    return fetch(`${config.baseUrl}/users/me`, {
         headers: config.headers
-    }).then(res => {
-        if (res.ok) {
-            return res.json();
-        }
-        // если ошибка, отклоняем промис
-        return Promise.reject(`Ошибка: ${res.status}`);
-    }).catch(err => {
-        console.log('err', err)
-    });
+    }).then(res => getResponseData(res))
 }
 
-function post(url, data = {}) {
-    return fetch(url, {
-        headers: config.headers,
-        method: 'POST',
-        body: JSON.stringify(data)
-    }).then(res => {
-        if (res.ok) {
-            return res.json();
-        }
-        // если ошибка, отклоняем промис
-        return Promise.reject(`Ошибка: ${res.status}`);
-    }).catch(err => {
-        console.log('err', err)
-    });
+const fetchCards = () => {
+    return fetch(`${config.baseUrl}/cards`, {
+        headers: config.headers
+    }).then(res => getResponseData(res))
 }
 
-function put(url, data = {}) {
-    return fetch(url, {
-        headers: config.headers,
-        method: 'PUT',
-        body: JSON.stringify(data)
-    }).then(res => {
-        if (res.ok) {
-            return res.json();
-        }
-        // если ошибка, отклоняем промис
-        return Promise.reject(`Ошибка: ${res.status}`);
-    }).catch(err => {
-        console.log('err', err)
-    });
-}
-
-function patch(url, data) {
-    return fetch(url, {
+const updateProfile = (data) => {
+    return fetch(`${config.baseUrl}/users/me`, {
         method: 'PATCH',
         headers: config.headers,
         body: JSON.stringify(data)
-    }).then(res => {
-        if (res.ok) {
-            return res.json();
-        }
-        // если ошибка, отклоняем промис
-        return Promise.reject(`Ошибка: ${res.status}`);
-    }).catch(err => {
-        console.log('err', err)
-    });
+    }).then(res => getResponseData(res))
 }
 
-function apiDelete(url, data = {}) {
-    return fetch(url, {
+const like = (id) => {
+    return fetch(`${config.baseUrl}/cards/likes/${id}`, {
+        method: 'PUT',
+        headers: config.headers,
+    }).then(res => getResponseData(res))
+}
+
+const dislike = (id) => {
+    return fetch(`${config.baseUrl}/cards/likes/${id}`, {
         method: 'DELETE',
         headers: config.headers,
+    }).then(res => getResponseData(res))
+}
+
+const deleteCard = (id) => {
+    return fetch(`${config.baseUrl}/cards/${id}`, {
+        method: 'DELETE',
+        headers: config.headers,
+    }).then(res => getResponseData(res))
+}
+
+const storeCard = (data) => {
+    return fetch(`${config.baseUrl}/cards`, {
+        method: 'POST',
+        headers: config.headers,
         body: JSON.stringify(data)
-    }).then(res => {
-        if (res.ok) {
-            return res.json();
-        }
-        // если ошибка, отклоняем промис
-        return Promise.reject(`Ошибка: ${res.status}`);
-    }).catch(err => {
-        console.log('err', err)
-    });
+    }).then(res => getResponseData(res))
+}
+
+const updateAvatar = (data) => {
+    return fetch(`${config.baseUrl}/users/me/avatar`, {
+        method: 'PATCH',
+        headers: config.headers,
+        body: JSON.stringify(data)
+    }).then(res => getResponseData(res))
 }
 
 export {
-    config,
-    get,
-    post,
-    patch,
-    put,
-    apiDelete
+    fetchMe,
+    fetchCards,
+    updateProfile,
+    like,
+    dislike,
+    deleteCard,
+    storeCard,
+    updateAvatar
 }

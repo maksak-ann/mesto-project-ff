@@ -12,7 +12,7 @@ const createCard = (card, authId, callbackOnDelete, callbackOnLike, callbackOnIm
     image.src = card.link;
     image.alt = card.name;
     image.addEventListener('click', () => {
-        callbackOnImageClick(image)
+        callbackOnImageClick(card)
     })
 
     const likeCounter = element.querySelector('.card__like-counter')

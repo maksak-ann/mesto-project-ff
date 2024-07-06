@@ -11,9 +11,24 @@ import {
     closePopup,
     clickOnOverlay,
 } from "./modal"
-import {enableValidation} from "./validation";
-import {get, config, put, apiDelete, patch, post} from "./api";
-import {authId, setProfileData} from "./profile";
+import {clearValidation, enableValidation} from "./validation";
+import * as api from "./api";
+
+const validationConfig = {
+    formSelector: '.popup__form',
+    inputSelector: '.popup__input',
+    submitButtonSelector: '.popup__button',
+    inactiveButtonClass: 'popup__button_disabled',
+    inputErrorClass: 'popup__input_type_error',
+    errorClass: 'popup__error_visible'
+}
+
+const profileElement = document.querySelector('.profile__info')
+const profileImageElement = document.querySelector('.profile__image')
+const profileNameElement = profileElement.querySelector('.profile__title')
+const profileDescriptionElement = profileElement.querySelector('.profile__description')
+
+let authId = null
 
 // Общее для попапов
 // Клик по оверлэю
@@ -27,8 +42,8 @@ popups.forEach((popup) => {
 // Клик по кнопке "закрыть попап"
 const closeButtons = document.querySelectorAll('.popup__close')
 closeButtons.forEach(btn => {
+    const popup = btn.closest('.popup')
     btn.addEventListener('click', (event) => {
-        const popup = event.target.closest('.popup_is-opened')
         closePopup(popup)
     })
 })
@@ -46,13 +61,13 @@ const finishLoading = (form, btnSelector = '.popup__button') => {
 const popupLightbox = document.querySelector(('.popup_type_image'))
 const imageLightbox = popupLightbox.querySelector('img')
 const captionLightbox = popupLightbox.querySelector('.popup__caption')
-const setLightboxImage = (img) => {
-    imageLightbox.src = img.src
-    imageLightbox.alt = img.alt
-    captionLightbox.textContent = img.alt
+const setLightboxImage = (link, title) => {
+    imageLightbox.src = link
+    imageLightbox.alt = title
+    captionLightbox.textContent = title
 }
-const handleImageClick = (image) => {
-    setLightboxImage(image)
+const handleImageClick = (card) => {
+    setLightboxImage(card.link, card.name)
     openPopup(popupLightbox)
 }
 
@@ -71,22 +86,17 @@ const formEditProfile = document.forms['edit-profile']
 buttonOpenPopupEditProfile.addEventListener('click', () => {
     inputName.value = labelName.textContent
     inputDescription.value = labelDescription.textContent
+    clearValidation(formEditProfile, validationConfig)
     openPopup(popupEditProfile)
 })
 formEditProfile.addEventListener('submit', function (evt) {
-    // отменим стандартное поведение
     evt.preventDefault();
 
-    // проверяем данные пользователя
     const name = formEditProfile.elements.name
     const description = formEditProfile.elements.description
     startLoading(formEditProfile)
 
-    if (!name.value.length || !description.value.length) {
-        return
-    }
-
-    patch(`${config.baseUrl}/users/me`, {
+    api.updateProfile({
         name: name.value,
         about: description.value
     }).then(res => {
@@ -94,10 +104,9 @@ formEditProfile.addEventListener('submit', function (evt) {
         closePopup(popupEditProfile)
     }).catch(err => {
         console.log('Error: ', err)
+    }).finally(() => {
+        finishLoading(formEditProfile)
     })
-        .finally(() => {
-            finishLoading(formEditProfile)
-        })
 });
 
 // EditAvatar Popup
@@ -106,122 +115,103 @@ const buttonOpenPopupEditAvatar = document.querySelector('.profile__image-edit')
 
 const formEditAvatar = document.forms['profile-image']
 formEditAvatar.addEventListener('submit', function (evt) {
-    // отменим стандартное поведение
     evt.preventDefault();
 
-    // проверяем данные пользователя
     const link = formEditAvatar.elements.link
 
     startLoading(formEditAvatar)
 
-    if (!link.value.length) {
-        return
-    }
-
-    patch(`${config.baseUrl}/users/me/avatar`, {
+    api.updateAvatar({
         avatar: link.value
     }).then(res => {
         setProfileData(res)
         closePopup(popupEditAvatar)
     }).catch(err => {
         console.log('Error: ', err)
+    }).finally(() => {
+        finishLoading(formEditAvatar)
     })
-        .finally(() => {
-            finishLoading(formEditAvatar)
-        })
 });
 buttonOpenPopupEditAvatar.addEventListener('click', () => {
+    clearValidation(formEditAvatar, validationConfig)
     openPopup(popupEditAvatar)
 })
 
 // formPlaceName Popup
-// Открыть попап
 const popupFormPlaceName = document.querySelector('.popup_type_new-card')
 const buttonOpenPopupForm = document.querySelector('.profile__add-button')
 
 const formPlaceName = document.forms['new-place'];
 
 buttonOpenPopupForm.addEventListener('click', () => {
+    clearValidation(formPlaceName, validationConfig)
     openPopup(popupFormPlaceName)
 })
 
-function like(cardElement, id) {
-    put(`${config.baseUrl}/cards/likes/${id}`)
-        .then(res => {
-            updateCardLikes(cardElement, res)
-        })
-}
-
-function dislike(cardElement, id) {
-    apiDelete(`${config.baseUrl}/cards/likes/${id}`)
-        .then(res => {
-            updateCardLikes(cardElement, res)
-        })
-}
-
 const likeCard = (cardElement, id) => {
     const likeElement = cardElement.querySelector('.card__like-button')
-    if (!likeElement.classList.contains('card__like-button_is-active')) {
-        like(cardElement, id)
-    } else {
-        dislike(cardElement, id)
-    }
+    const action = likeElement.classList.contains('card__like-button_is-active')
+        ? api.dislike
+        : api.like
+
+    action(id)
+        .then(res => updateCardLikes(cardElement, res))
+        .catch(err => {
+            console.log('Error: ', err)
+        })
 }
 
 const deleteCard = (cardElement, id) => {
-    apiDelete(`${config.baseUrl}/cards/${id}`)
+    api.deleteCard(id)
         .then(res => {
             cardElement.remove()
+        })
+        .catch(err => {
+            console.log('Error: ', err)
         })
 }
 
 formPlaceName.addEventListener('submit', function (evt) {
-    // отменим стандартное поведение
     evt.preventDefault();
 
-    // проверяем данные пользователя
     const placeName = formPlaceName.elements['place-name']
     const link = formPlaceName.elements.link
-    if (!placeName.value.length || !link.value.length) {
-        return
-    }
 
     startLoading(formPlaceName)
 
-    post(`${config.baseUrl}/cards`, {
+    api.storeCard({
         name: placeName.value,
         link: link.value,
     }).then(res => {
         cardsList.prepend(createCard(res, authId, deleteCard, likeCard, handleImageClick));
+        closePopup(popupFormPlaceName)
+        formPlaceName.reset()
     }).catch(err => {
         console.log('Error: ', err)
+    }).finally(() => {
+        finishLoading(formPlaceName)
     })
-        .finally(() => {
-            finishLoading(formPlaceName)
-        })
 
-    closePopup(popupFormPlaceName)
-    formPlaceName.reset()
 });
 
-// Создание карточек
+function setProfileData(data) {
+    profileNameElement.textContent = data.name
+    profileDescriptionElement.textContent = data.about
+    profileImageElement.style.backgroundImage = `url('${data.avatar}')`
+    authId = data._id
+}
+
 const cardsList = document.querySelector(".places__list");
 Promise.all([
-    get(`${config.baseUrl}/users/me`),
-    get(`${config.baseUrl}/cards`),
+    api.fetchMe(),
+    api.fetchCards(),
 ]).then(([userData, cardsArray]) => {
-    // Загрузка профиля
     setProfileData(userData)
     cardsArray.forEach((cardItem) => {
         cardsList.append(createCard(cardItem, authId, deleteCard, likeCard, handleImageClick));
     })
+}).catch(err => {
+    console.log('err in all', err)
 })
 
-enableValidation({
-    formSelector: '.popup__form',
-    inputSelector: '.popup__input',
-    submitButtonSelector: '.popup__button',
-    inactiveButtonClass: 'popup__button_disabled',
-    inputErrorClass: 'popup__input_type_error',
-    errorClass: 'popup__error_visible'
-})
+enableValidation(validationConfig)
