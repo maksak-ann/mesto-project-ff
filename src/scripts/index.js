@@ -112,6 +112,7 @@ formEditProfile.addEventListener('submit', function (evt) {
 // EditAvatar Popup
 const popupEditAvatar = document.querySelector('.popup_type_avatar')
 const buttonOpenPopupEditAvatar = document.querySelector('.profile__image-edit')
+const inputAvatar = popupEditAvatar.querySelector('.popup__input_type_avatar')
 
 const formEditAvatar = document.forms['profile-image']
 formEditAvatar.addEventListener('submit', function (evt) {
@@ -133,6 +134,7 @@ formEditAvatar.addEventListener('submit', function (evt) {
     })
 });
 buttonOpenPopupEditAvatar.addEventListener('click', () => {
+    inputAvatar.value = ''
     clearValidation(formEditAvatar, validationConfig)
     openPopup(popupEditAvatar)
 })
