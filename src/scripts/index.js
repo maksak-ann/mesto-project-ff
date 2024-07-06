@@ -33,6 +33,15 @@ closeButtons.forEach(btn => {
     })
 })
 
+const startLoading = (form, btnSelector = '.popup__button') => {
+    const button = form.querySelector(btnSelector)
+    button.textContent = 'Сохранение...'
+}
+const finishLoading = (form, btnSelector = '.popup__button') => {
+    const button = form.querySelector(btnSelector)
+    button.textContent = 'Сохранить'
+}
+
 // Lightbox popup
 const popupLightbox = document.querySelector(('.popup_type_image'))
 const imageLightbox = popupLightbox.querySelector('img')
@@ -71,6 +80,7 @@ formEditProfile.addEventListener('submit', function (evt) {
     // проверяем данные пользователя
     const name = formEditProfile.elements.name
     const description = formEditProfile.elements.description
+    startLoading(formEditProfile)
 
     if (!name.value.length || !description.value.length) {
         return
@@ -85,6 +95,9 @@ formEditProfile.addEventListener('submit', function (evt) {
     }).catch(err => {
         console.log('Error: ', err)
     })
+        .finally(() => {
+            finishLoading(formEditProfile)
+        })
 });
 
 // EditAvatar Popup
@@ -99,6 +112,8 @@ formEditAvatar.addEventListener('submit', function (evt) {
     // проверяем данные пользователя
     const link = formEditAvatar.elements.link
 
+    startLoading(formEditAvatar)
+
     if (!link.value.length) {
         return
     }
@@ -111,6 +126,9 @@ formEditAvatar.addEventListener('submit', function (evt) {
     }).catch(err => {
         console.log('Error: ', err)
     })
+        .finally(() => {
+            finishLoading(formEditAvatar)
+        })
 });
 buttonOpenPopupEditAvatar.addEventListener('click', () => {
     openPopup(popupEditAvatar)
@@ -168,6 +186,8 @@ formPlaceName.addEventListener('submit', function (evt) {
         return
     }
 
+    startLoading(formPlaceName)
+
     post(`${config.baseUrl}/cards`, {
         name: placeName.value,
         link: link.value,
@@ -176,6 +196,9 @@ formPlaceName.addEventListener('submit', function (evt) {
     }).catch(err => {
         console.log('Error: ', err)
     })
+        .finally(() => {
+            finishLoading(formPlaceName)
+        })
 
     closePopup(popupFormPlaceName)
     formPlaceName.reset()
