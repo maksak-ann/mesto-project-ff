@@ -3,12 +3,8 @@ import "../pages/index.css";
 
 // Imports
 import {
-    initialCards,
-} from "./cards";
-import {
     createCard,
-    deleteCard,
-    likeCard
+    updateCardLikes,
 } from "./card";
 import {
     openPopup,
@@ -16,6 +12,8 @@ import {
     clickOnOverlay,
 } from "./modal"
 import {enableValidation} from "./validation";
+import {get, config, put, apiDelete, patch, post} from "./api";
+import {authId, setProfileData} from "./profile";
 
 // Общее для попапов
 // Клик по оверлэю
@@ -66,7 +64,6 @@ buttonOpenPopupEditProfile.addEventListener('click', () => {
     inputDescription.value = labelDescription.textContent
     openPopup(popupEditProfile)
 })
-
 formEditProfile.addEventListener('submit', function (evt) {
     // отменим стандартное поведение
     evt.preventDefault();
@@ -79,11 +76,45 @@ formEditProfile.addEventListener('submit', function (evt) {
         return
     }
 
-    labelName.textContent = name.value
-    labelDescription.textContent = description.value
-
-    closePopup(popupEditProfile)
+    patch(`${config.baseUrl}/users/me`, {
+        name: name.value,
+        about: description.value
+    }).then(res => {
+        setProfileData(res)
+        closePopup(popupEditProfile)
+    }).catch(err => {
+        console.log('Error: ', err)
+    })
 });
+
+// EditAvatar Popup
+const popupEditAvatar = document.querySelector('.popup_type_avatar')
+const buttonOpenPopupEditAvatar = document.querySelector('.profile__image-edit')
+
+const formEditAvatar = document.forms['profile-image']
+formEditAvatar.addEventListener('submit', function (evt) {
+    // отменим стандартное поведение
+    evt.preventDefault();
+
+    // проверяем данные пользователя
+    const link = formEditAvatar.elements.link
+
+    if (!link.value.length) {
+        return
+    }
+
+    patch(`${config.baseUrl}/users/me/avatar`, {
+        avatar: link.value
+    }).then(res => {
+        setProfileData(res)
+        closePopup(popupEditAvatar)
+    }).catch(err => {
+        console.log('Error: ', err)
+    })
+});
+buttonOpenPopupEditAvatar.addEventListener('click', () => {
+    openPopup(popupEditAvatar)
+})
 
 // formPlaceName Popup
 // Открыть попап
@@ -96,6 +127,36 @@ buttonOpenPopupForm.addEventListener('click', () => {
     openPopup(popupFormPlaceName)
 })
 
+function like(cardElement, id) {
+    put(`${config.baseUrl}/cards/likes/${id}`)
+        .then(res => {
+            updateCardLikes(cardElement, res)
+        })
+}
+
+function dislike(cardElement, id) {
+    apiDelete(`${config.baseUrl}/cards/likes/${id}`)
+        .then(res => {
+            updateCardLikes(cardElement, res)
+        })
+}
+
+const likeCard = (cardElement, id) => {
+    const likeElement = cardElement.querySelector('.card__like-button')
+    if (!likeElement.classList.contains('card__like-button_is-active')) {
+        like(cardElement, id)
+    } else {
+        dislike(cardElement, id)
+    }
+}
+
+const deleteCard = (cardElement, id) => {
+    apiDelete(`${config.baseUrl}/cards/${id}`)
+        .then(res => {
+            cardElement.remove()
+        })
+}
+
 formPlaceName.addEventListener('submit', function (evt) {
     // отменим стандартное поведение
     evt.preventDefault();
@@ -107,10 +168,14 @@ formPlaceName.addEventListener('submit', function (evt) {
         return
     }
 
-    cardsList.prepend(createCard({
+    post(`${config.baseUrl}/cards`, {
         name: placeName.value,
         link: link.value,
-    }, deleteCard, likeCard, handleImageClick));
+    }).then(res => {
+        cardsList.prepend(createCard(res, authId, deleteCard, likeCard, handleImageClick));
+    }).catch(err => {
+        console.log('Error: ', err)
+    })
 
     closePopup(popupFormPlaceName)
     formPlaceName.reset()
@@ -118,9 +183,16 @@ formPlaceName.addEventListener('submit', function (evt) {
 
 // Создание карточек
 const cardsList = document.querySelector(".places__list");
-initialCards.forEach((cardItem) => {
-    cardsList.append(createCard(cardItem, deleteCard, likeCard, handleImageClick));
-});
+Promise.all([
+    get(`${config.baseUrl}/users/me`),
+    get(`${config.baseUrl}/cards`),
+]).then(([userData, cardsArray]) => {
+    // Загрузка профиля
+    setProfileData(userData)
+    cardsArray.forEach((cardItem) => {
+        cardsList.append(createCard(cardItem, authId, deleteCard, likeCard, handleImageClick));
+    })
+})
 
 enableValidation({
     formSelector: '.popup__form',

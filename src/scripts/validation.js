@@ -56,5 +56,6 @@ function clearValidation(profileForm, validationConfig) {
 
 export {
     enableValidation,
-    clearValidation
+    clearValidation,
+    showInputError
 }
