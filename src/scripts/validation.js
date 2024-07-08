@@ -31,11 +31,30 @@ const isValid = (formElement, inputElement, config) => {
     }
 };
 
+const hasInvalidInput = (inputList) => {
+    return inputList.some((inputElement) => {
+        return !inputElement.validity.valid;
+    });
+}
+
+const toggleButtonState = (inputList, buttonElement, config) => {
+    if(hasInvalidInput(inputList)) {
+        buttonElement.classList.add(config.inactiveButtonClass)
+    } else {
+        buttonElement.classList.remove(config.inactiveButtonClass)
+    }
+}
+
 const setEventListeners = (formElement, inputSelector, config) => {
     const inputList = Array.from(formElement.querySelectorAll(inputSelector));
+    const buttonElement = formElement.querySelector(config.submitButtonSelector);
+
+    toggleButtonState(inputList, buttonElement, config);
+
     inputList.forEach((inputElement) => {
         inputElement.addEventListener('input', () => {
             isValid(formElement, inputElement, config)
+            toggleButtonState(inputList, buttonElement, config)
         });
     });
 };
@@ -54,7 +73,7 @@ function clearValidation(formElement, config) {
         hideInputError(formElement, inputElement, config)
     });
     const buttonElement = formElement.querySelector(config.submitButtonSelector)
-    buttonElement.classList.add(config.inactiveButtonClass);
+    toggleButtonState(inputList, buttonElement, config)
 }
 
 export {
