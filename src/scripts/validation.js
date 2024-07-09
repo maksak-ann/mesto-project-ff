@@ -1,8 +1,7 @@
 const showInputError = (formElement, inputElement, errorMessage, config) => {
     const errorElement = inputElement.nextElementSibling;
-    const buttonElement = formElement.querySelector(config.submitButtonSelector)
     inputElement.classList.add(config.inputErrorClass);
-    buttonElement.classList.add(config.inactiveButtonClass);
+
     errorElement.textContent = errorMessage;
     errorElement.classList.add(config.errorClass);
 
@@ -10,9 +9,8 @@ const showInputError = (formElement, inputElement, errorMessage, config) => {
 
 const hideInputError = (formElement, inputElement, config) => {
     const errorElement = inputElement.nextElementSibling;
-    const buttonElement = formElement.querySelector(config.submitButtonSelector)
     inputElement.classList.remove(config.inputErrorClass);
-    buttonElement.classList.remove(config.inactiveButtonClass);
+
     errorElement.classList.remove(config.errorClass);
     errorElement.textContent = '';
 };
@@ -40,8 +38,10 @@ const hasInvalidInput = (inputList) => {
 const toggleButtonState = (inputList, buttonElement, config) => {
     if(hasInvalidInput(inputList)) {
         buttonElement.classList.add(config.inactiveButtonClass)
+        buttonElement.disabled = true
     } else {
         buttonElement.classList.remove(config.inactiveButtonClass)
+        buttonElement.disabled = false
     }
 }
 
